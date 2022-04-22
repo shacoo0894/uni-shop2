@@ -41,6 +41,12 @@
 </template>
 
 <script>
+	import {
+		mapState,
+		mapMutations,
+		mapGetters
+	} from 'vuex'
+
 	export default {
 		data() {
 			return {
@@ -53,7 +59,7 @@
 				}, {
 					icon: 'cart',
 					text: '购物车',
-					info: 2
+					info: 0
 				}],
 				// 右侧按钮组的配置对象
 				buttonGroup: [{
@@ -69,11 +75,33 @@
 				]
 			}
 		},
+		computed: {
+			...mapState('m_cart', []),
+			...mapGetters('m_cart', ['total'])
+		},
+		watch: {
+			// total(newVal) {
+			// 	const findResult = this.options.find(x => x.text === '购物车')
+			// 	if (findResult) {
+			// 		findResult.info = newVal
+			// 	}
+			// }
+			total: {
+				handler(newVal) {
+					const findResult = this.options.find(x => x.text === '购物车')
+					if (findResult) {
+						findResult.info = newVal
+					}
+				},
+				immediate: true
+			}
+		},
 		onLoad(options) {
 			const goods_id = options.goods_id
 			this.getGoodsDetail(goods_id)
 		},
 		methods: {
+			...mapMutations('m_cart', ['addToCart']),
 			async getGoodsDetail(goods_id) {
 				const {
 					data: res
@@ -94,10 +122,24 @@
 				})
 			},
 			onClick(e) {
-				if(e.content.text === '购物车') {
+				if (e.content.text === '购物车') {
 					uni.switchTab({
 						url: '/pages/cart/cart'
 					})
+				}
+			},
+			buttonClick(e) {
+				if (e.content.text === '加入购物车') {
+					const goods = {
+						goods_id: this.goods_info.goods_id,
+						goods_name: this.goods_info.goods_name,
+						goods_price: this.goods_info.goods_price,
+						goods_count: 1,
+						goods_small_logo: this.goods_info.goods_small_logo,
+						goods_state: true
+					}
+
+					this.addToCart(goods)
 				}
 			}
 		}
@@ -151,14 +193,14 @@
 			margin: 10px 0;
 		}
 	}
-	
+
 	.goods_nav {
 		position: fixed;
 		bottom: 0;
 		left: 0;
 		width: 100%;
 	}
-	
+
 	.goods-detail-cantainer {
 		padding-bottom: 50px;
 	}
